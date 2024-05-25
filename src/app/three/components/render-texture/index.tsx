@@ -47,6 +47,12 @@ export interface RenderTextureProps {
   renderPriority?: number;
   /** The camera to render */
   camera?: THREE.Camera;
+  /** Tonemapping */
+  toneMapping?: THREE.ToneMapping;
+  /** Tonemapping exposure */
+  toneMappingExposure?: number;
+  /** Render target format */
+  format?: THREE.RenderTargetOptions["format"];
 }
 
 export const renderTextureContext = createContext<{
@@ -102,6 +108,9 @@ export const RenderTexture = ({
   useGlobalPointer,
   renderPriority,
   camera,
+  toneMapping,
+  toneMappingExposure,
+  format = RGBAFormat,
 }: PropsWithChildren<RenderTextureProps>) => {
   // once the canvas is loaded, force render
 
@@ -111,19 +120,21 @@ export const RenderTexture = ({
       new THREE.WebGLRenderTarget(width, height, {
         samples: 8,
         stencilBuffer: true,
+        colorSpace: "srgb",
         depthTexture: new THREE.DepthTexture(
           width,
           height,
           THREE.UnsignedInt248Type
         ),
-        format: RGBAFormat,
+        format: format,
       });
     return fbo;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_fbo]);
+  }, [_fbo, format]);
 
   useEffect(() => {
-    if (onMapTexture) {
+    if (onMapTexture && fbo.texture) {
+      fbo.texture.colorSpace = "srgb";
       onMapTexture(fbo.texture);
     }
 
@@ -232,6 +243,8 @@ export const RenderTexture = ({
             fbo={fbo}
             renderPriority={renderPriority}
             camera={camera}
+            toneMapping={toneMapping}
+            toneMappingExposure={toneMappingExposure}
           >
             {children}
             {/* Without an element that receives pointer events state.pointer will always be 0/0 */}
@@ -253,10 +266,17 @@ export const RenderTexture = ({
   );
 };
 
+const DEFALT_TOONEMAPPING = THREE.NoToneMapping;
+const DEFAULT_TOONEMAPPING_EXPOSURE = 1;
+
 interface SceneContainerProps {
   fbo: THREE.WebGLRenderTarget;
   renderPriority?: number;
   camera?: THREE.Camera;
+  /** Tonemapping */
+  toneMapping?: THREE.ToneMapping;
+  /** Tonemapping exposure */
+  toneMappingExposure?: number;
 }
 
 const SceneContainer = ({
@@ -264,10 +284,23 @@ const SceneContainer = ({
   renderPriority,
   children,
   camera,
+  toneMapping,
+  toneMappingExposure,
 }: PropsWithChildren<SceneContainerProps>) => {
   useTextureFrame(({ state }) => {
+    if (typeof toneMapping !== "undefined") {
+      state.gl.toneMapping = toneMapping;
+    }
+    if (typeof toneMappingExposure !== "undefined")
+      state.gl.toneMappingExposure = toneMappingExposure;
+
+    state.gl.outputColorSpace = THREE.SRGBColorSpace;
+    state.gl.toneMapping = DEFALT_TOONEMAPPING;
+    state.gl.toneMappingExposure = DEFAULT_TOONEMAPPING_EXPOSURE;
+
     state.gl.setRenderTarget(fbo as any);
     state.gl.render(state.scene, (camera as any) || state.camera);
+    state.gl.clear();
     state.gl.setRenderTarget(null);
   }, renderPriority);
 

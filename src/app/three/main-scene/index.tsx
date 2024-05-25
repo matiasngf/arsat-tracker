@@ -2,32 +2,36 @@ import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 
 import { useApp } from "@/store";
 import { useEffect, useMemo, useState } from "react";
-import type { Camera, Texture } from "three";
 import {
+  HalfFloatType,
   PerspectiveCamera as ThreePerspectiveCamera,
-  Vector3,
-  WebGLRenderTarget,
 } from "three";
-import { Arsat } from "@/app/three/components/arsat";
 import { RenderTexture } from "../components/render-texture";
 import { useUniforms } from "../hooks/use-uniforms";
 import { useFrame, useThree } from "@react-three/fiber";
-import {
-  EffectComposer,
-  FXAAShader,
-  ShaderPass,
-} from "three/examples/jsm/Addons.js";
+// import { EffectComposer } from "three/examples/jsm/Addons.js";
 import {
   RenderUniforms,
   defaultRenderUniforms,
+  drawMaterial,
   drawPass,
 } from "../utils/draw-pass";
 import { Earth } from "../components/earth";
+import { Stars } from "../components/stars";
+import { Sun } from "../components/sun";
+import { ArsatScene } from "../components/arsat/arsat-scene";
+import {
+  EffectComposer,
+  BloomEffect,
+  EffectPass,
+  VignetteEffect,
+} from "postprocessing";
 
 // Clones of the camera that will be injected into each scene
 const innerCameras = {
   arsat: new ThreePerspectiveCamera(),
   earth: new ThreePerspectiveCamera(),
+  sun: new ThreePerspectiveCamera(),
 } as const;
 
 export const MainScene = () => {
@@ -36,20 +40,35 @@ export const MainScene = () => {
   const [_, setRenderUniforms] = useUniforms<RenderUniforms>(
     defaultRenderUniforms,
     {
-      syncShader: drawPass,
+      syncShader: drawMaterial,
     }
   );
 
   const renderer = useMemo(() => {
-    const composer = new EffectComposer(gl as any);
-    composer.addPass(drawPass as any);
-    const fxaaPass = new ShaderPass(FXAAShader);
-    composer.addPass(fxaaPass);
+    const composer = new EffectComposer(gl, {
+      frameBufferType: HalfFloatType,
+    });
+
+    // composer.addPass(new RenderPass())
+
+    composer.addPass(drawPass);
+
+    composer.addPass(
+      new EffectPass(
+        undefined,
+        new BloomEffect({
+          intensity: 10,
+          levels: 6,
+          luminanceThreshold: 0.9,
+        })
+      )
+    );
+
+    composer.addPass(new EffectPass(undefined, new VignetteEffect()));
 
     return {
       composer,
       drawPass,
-      fxaaPass,
     };
   }, [gl]);
   const [camera, setCamera] = useState<ThreePerspectiveCamera | undefined>(
@@ -65,8 +84,12 @@ export const MainScene = () => {
     if (camera) {
       innerCameras.arsat.aspect = camera.aspect;
       innerCameras.arsat.updateProjectionMatrix();
+
       innerCameras.earth.aspect = camera.aspect;
       innerCameras.earth.updateProjectionMatrix();
+
+      innerCameras.sun.aspect = camera.aspect;
+      innerCameras.sun.updateProjectionMatrix();
     }
     renderer.composer.setSize(width, height);
   }, [width, height, renderer, camera]);
@@ -80,6 +103,10 @@ export const MainScene = () => {
       innerCameras.earth.position.set(0.5, 0, 1.5);
       innerCameras.earth.quaternion.copy(camera.quaternion);
       innerCameras.earth.fov = camera.fov;
+
+      innerCameras.sun.position.set(0, 0, 0);
+      innerCameras.sun.quaternion.copy(camera.quaternion);
+      innerCameras.sun.fov = camera.fov;
     }
 
     renderer.composer.render();
@@ -106,9 +133,7 @@ export const MainScene = () => {
         }}
       >
         <primitive object={innerCameras.arsat} />
-        <Arsat />
-        <directionalLight position={[1, 0.5, 0]} intensity={2} />
-        <ambientLight intensity={1} />
+        <ArsatScene />
       </RenderTexture>
 
       <RenderTexture
@@ -120,8 +145,22 @@ export const MainScene = () => {
         }}
       >
         <primitive object={innerCameras.earth} />
-        <Earth lightDirection={new Vector3(1, 0.5, 0)} />
+        <Earth />
         <ambientLight intensity={1} />
+      </RenderTexture>
+
+      <RenderTexture
+        toneMappingExposure={10}
+        width={width}
+        height={height}
+        camera={innerCameras.sun}
+        onMapTexture={(sunFbo) => {
+          setRenderUniforms({ sunFbo });
+        }}
+      >
+        <primitive object={innerCameras.sun} />
+        <Stars />
+        <Sun />
       </RenderTexture>
     </>
   );

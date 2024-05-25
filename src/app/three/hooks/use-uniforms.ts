@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react'
-import type { ShaderPass } from 'three-stdlib'
+import type { ShaderPass } from 'postprocessing'
 import { useStateToRef } from './use-state-to-ref'
+import { ShaderMaterial } from 'three'
 
 export interface Uniform<T = unknown> {
   value: T
@@ -12,7 +13,7 @@ export type Uniforms<T = Record<string, unknown>> = {
 
 interface UseUnifomsOptions<Uniforms> {
   onUpdate?: (updatedUniforms: Partial<Uniforms>) => void
-  syncShader?: ShaderPass
+  syncShader?: ShaderMaterial
 }
 
 export const useUniforms = <T extends Record<string, unknown>>(

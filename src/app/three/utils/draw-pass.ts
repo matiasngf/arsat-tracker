@@ -1,20 +1,12 @@
 import { ShaderMaterial, Texture } from "three"
-import { ShaderPass } from "three-stdlib"
+import { ShaderPass } from "postprocessing"
 import { Uniforms } from "../hooks/use-uniforms";
 
 const drawVertexShader = /*glsl*/`
 varying vec2 vUv;
-// varying vec2 translatedUv;
-// varying vec2 vAspectUV;
-// varying vec2 translatedAspectUV;
 
 void main() {
-  // float translateFactor = 1.;
-  // float aspect = resolution.x / resolution.y;
   vUv = uv;
-  // translatedUv = uv + vec2(0.0, cameraY * translateFactor);
-  // vAspectUV = uv * vec2(aspect, 1.0);
-  // translatedAspectUV = translatedUv * vec2(aspect, 1.0);
 
   gl_Position = vec4(position, 1.0);
 }
@@ -22,38 +14,47 @@ void main() {
 
 const drawFragmentShader = /*glsl*/`
 varying vec2 vUv;
-// varying vec2 translatedUv;
-// varying vec2 vAspectUV;
-// varying vec2 translatedAspectUV;
 
-uniform sampler2D arsatFbo;
-uniform sampler2D earthFbo;
+uniform mediump sampler2D sunFbo;
+uniform mediump sampler2D earthFbo;
+uniform mediump sampler2D arsatFbo;
 
 void main() {
+  vec4 sunSample = texture2D(sunFbo, vUv);
   vec4 earthSample = texture2D(earthFbo, vUv);
   vec4 arsatSample = texture2D(arsatFbo, vUv);
 
-  vec3 color = mix(earthSample.rgb, arsatSample.rgb, arsatSample.a);
+  float gamma = 1.2;
+  vec3 sunColor = sunSample.rgb;
+  vec3 earthColor = earthSample.rgb;
+  vec3 arsatColor = arsatSample.rgb;
+
+  vec3 color;
+  color = mix(sunColor, earthColor, earthSample.a);
+  color = mix(color, arsatColor, arsatSample.a);
+
   vec4 frag = vec4(color, 1.0);
   gl_FragColor = frag;
 }
-
 `
 
 export type RenderUniforms = {
   arsatFbo: Texture | null;
   earthFbo: Texture | null;
+  sunFbo: Texture | null;
 };
 
 export const defaultRenderUniforms: RenderUniforms = {
   arsatFbo: null,
   earthFbo: null,
+  sunFbo: null,
 };
 
 const getDrawPass = () => {
   const uniforms: Uniforms<RenderUniforms> = {
     arsatFbo: { value: null },
     earthFbo: { value: null },
+    sunFbo: { value: null },
   }
 
   const drawMaterial = new ShaderMaterial({
@@ -62,7 +63,9 @@ const getDrawPass = () => {
     uniforms
   })
 
-  return new ShaderPass(drawMaterial)
+  const shaderPass = new ShaderPass(drawMaterial as any)
+
+  return [shaderPass, drawMaterial] as const
 }
 
-export const drawPass = getDrawPass();
+export const [drawPass, drawMaterial] = getDrawPass();

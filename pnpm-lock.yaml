@@ -23,6 +23,9 @@ importers:
       next:
         specifier: 14.2.3
         version: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      postprocessing:
+        specifier: ^6.35.4
+        version: 6.35.4(three@0.164.1)
       react:
         specifier: ^18
         version: 18.3.1
@@ -1675,6 +1678,12 @@ packages:
   postcss@8.4.38:
     resolution: {integrity: sha512-Wglpdk03BSfXkHoQa3b/oulrotAkwrlLDRSOb9D0bN86FdRyE9lppSp33aHNPgBa0JKCoB+drFLZkQoRRYae5A==}
     engines: {node: ^10 || ^12 || >=14}
+
+  postprocessing@6.35.4:
+    resolution: {integrity: sha512-U4Uk+wOHRbdlMV8zhn843K3bZyiWGKnWXWSsDXa8IW6NAiAP/YJtf6DHs4UFo1gLnNnRGpgJPc2Xxai9O/HoLg==}
+    engines: {node: '>= 0.13.2'}
+    peerDependencies:
+      three: '>= 0.152.0 < 0.165.0'
 
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
@@ -3911,6 +3920,10 @@ snapshots:
       nanoid: 3.3.7
       picocolors: 1.0.1
       source-map-js: 1.2.0
+
+  postprocessing@6.35.4(three@0.164.1):
+    dependencies:
+      three: 0.164.1
 
   potpack@1.0.2: {}
 

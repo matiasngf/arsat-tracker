@@ -1,18 +1,11 @@
-import { BackSide, Vector3 } from "three";
+import { BackSide } from "three";
 import { atmosphereFragmentShader, atmosphereVertexShader } from "./shaders";
-import { useEffect, useRef } from "react";
+import { useSun } from "../sun";
 
 const verteces = Math.pow(2, 9);
 
-interface AtmosphereProps {
-  lightDirection: Vector3;
-}
-
-export const Atmosphere = ({ lightDirection }: AtmosphereProps) => {
-  const lightDirectionRef = useRef<Vector3>(lightDirection.clone());
-  useEffect(() => {
-    lightDirectionRef.current.copy(lightDirection);
-  }, [lightDirection]);
+export const Atmosphere = () => {
+  const sunDirection = useSun((state) => state.sunDirection);
 
   return (
     <mesh>
@@ -23,7 +16,7 @@ export const Atmosphere = ({ lightDirection }: AtmosphereProps) => {
         fragmentShader={atmosphereFragmentShader}
         transparent
         uniforms={{
-          lightDirection: { value: lightDirectionRef.current },
+          lightDirection: { value: sunDirection },
         }}
       />
     </mesh>

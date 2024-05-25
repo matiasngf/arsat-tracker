@@ -5,17 +5,15 @@ import { GroupProps, useFrame, useLoader } from "@react-three/fiber";
 import { earthFragmentShader, earthVertexShader } from "./shaders";
 import { useEffect, useRef } from "react";
 import { Atmosphere } from "../atmosphere";
+import { useSun } from "../sun";
 
 const verteces = Math.pow(2, 9);
 
-export interface EarthProps {
-  lightDirection: Vector3;
-}
+export interface EarthProps {}
 
-export const Earth = ({
-  lightDirection,
-  ...props
-}: EarthProps & GroupProps) => {
+export const Earth = ({ ...props }: EarthProps & GroupProps) => {
+  const sunDirection = useSun((state) => state.sunDirection);
+
   const [earthDayTexture, nightTexture, cloudTexture] = useLoader(
     TextureLoader,
     [
@@ -35,15 +33,12 @@ export const Earth = ({
     nightMap: { value: nightTexture },
     cloudMap: { value: cloudTexture },
     uTime: { value: 0 },
-    lightDirection: { value: lightDirection.clone() },
+    lightDirection: { value: sunDirection },
   });
 
   useFrame((_, delta) => {
     uniformsRef.current.uTime.value += delta;
   });
-  useEffect(() => {
-    uniformsRef.current.lightDirection.value.copy(lightDirection);
-  }, [lightDirection]);
 
   return (
     <group {...props}>
@@ -53,7 +48,7 @@ export const Earth = ({
           fragmentShader={earthFragmentShader}
           uniforms={uniformsRef.current}
         />
-        <Atmosphere lightDirection={lightDirection} />
+        <Atmosphere />
       </Sphere>
     </group>
   );
