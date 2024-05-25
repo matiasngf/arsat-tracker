@@ -1,4 +1,6 @@
-import { AddEquation, Vector3 } from "three";
+import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
+import { Mesh, Vector3 } from "three";
 import { create } from "zustand";
 
 export interface SunStore {
@@ -21,21 +23,30 @@ export const useSun = create<SunStore>((set) => {
 });
 
 export const Sun = () => {
-  const sunPosition = useSun((state) => state.sunPosition);
+  const meshRef = useRef<Mesh>(null);
 
+  const sunPosition = useSun((state) => state.sunPosition);
   const setSunDirection = useSun((state) => state.setSunDirection);
 
-  setSunDirection(new Vector3(1, 0, 0.2).normalize());
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime() * 0.2;
+    const x = Math.sin(t);
+    const z = Math.cos(t);
+    setSunDirection(new Vector3(-x, 0, z).normalize());
+
+    if (meshRef.current) {
+      meshRef.current.position.copy(sunPosition);
+    }
+  });
 
   return (
-    <mesh position={sunPosition as any}>
-      <sphereGeometry args={[0.2, 32, 32]} />
+    <mesh ref={meshRef as any} position={sunPosition as any}>
+      <sphereGeometry args={[0.1, 32, 32]} />
       <meshStandardMaterial
         color="#ffffff"
-        emissive="orange"
+        emissive="#fff2a8"
         emissiveIntensity={10}
-        toneMapped={true}
-        blendEquation={AddEquation}
+        toneMapped={false}
       />
     </mesh>
   );

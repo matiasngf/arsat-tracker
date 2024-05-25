@@ -4,11 +4,12 @@ import { useApp } from "@/store";
 import { useEffect, useMemo, useState } from "react";
 import {
   HalfFloatType,
+  Scene,
   PerspectiveCamera as ThreePerspectiveCamera,
 } from "three";
 import { RenderTexture } from "../components/render-texture";
 import { useUniforms } from "../hooks/use-uniforms";
-import { useFrame, useThree } from "@react-three/fiber";
+import { createPortal, useFrame, useThree } from "@react-three/fiber";
 // import { EffectComposer } from "three/examples/jsm/Addons.js";
 import {
   RenderUniforms,
@@ -25,6 +26,7 @@ import {
   BloomEffect,
   EffectPass,
   VignetteEffect,
+  RenderPass,
 } from "postprocessing";
 
 // Clones of the camera that will be injected into each scene
@@ -49,22 +51,21 @@ export const MainScene = () => {
       frameBufferType: HalfFloatType,
     });
 
-    // composer.addPass(new RenderPass())
-
     composer.addPass(drawPass);
 
     composer.addPass(
       new EffectPass(
         undefined,
         new BloomEffect({
+          mipmapBlur: true,
           intensity: 10,
           levels: 6,
-          luminanceThreshold: 0.9,
+          luminanceThreshold: 0.71,
         })
       )
     );
 
-    composer.addPass(new EffectPass(undefined, new VignetteEffect()));
+    composer.addPass(new EffectPass(undefined, new VignetteEffect({})));
 
     return {
       composer,

@@ -15,9 +15,9 @@ void main() {
 const drawFragmentShader = /*glsl*/`
 varying vec2 vUv;
 
-uniform mediump sampler2D sunFbo;
-uniform mediump sampler2D earthFbo;
-uniform mediump sampler2D arsatFbo;
+uniform highp sampler2D sunFbo;
+uniform highp sampler2D earthFbo;
+uniform highp sampler2D arsatFbo;
 
 void main() {
   vec4 sunSample = texture2D(sunFbo, vUv);

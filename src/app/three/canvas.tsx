@@ -27,7 +27,6 @@ export const GlCanvas = () => {
       gl={{
         antialias: true,
         alpha: true,
-        outputColorSpace: "srgb",
       }}
       ref={(canvas) => {
         if (canvas) {
