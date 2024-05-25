@@ -37,6 +37,7 @@ export const Earth = ({ ...props }: EarthProps & GroupProps) => {
   });
 
   useFrame((_, delta) => {
+    uniformsRef.current.lightDirection.value.copy(sunDirection);
     uniformsRef.current.uTime.value += delta;
   });
 

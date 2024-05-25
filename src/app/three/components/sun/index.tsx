@@ -29,7 +29,7 @@ export const Sun = () => {
   const setSunDirection = useSun((state) => state.setSunDirection);
 
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime() * 0.2;
+    const t = clock.getElapsedTime() * 0.1;
     const x = Math.sin(t);
     const z = Math.cos(t);
     setSunDirection(new Vector3(-x, 0, z).normalize());

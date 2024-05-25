@@ -95,7 +95,7 @@ export const MainScene = () => {
     renderer.composer.setSize(width, height);
   }, [width, height, renderer, camera]);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (camera) {
       innerCameras.arsat.position.copy(camera.position);
       innerCameras.arsat.quaternion.copy(camera.quaternion);
@@ -108,6 +108,11 @@ export const MainScene = () => {
       innerCameras.sun.position.set(0, 0, 0);
       innerCameras.sun.quaternion.copy(camera.quaternion);
       innerCameras.sun.fov = camera.fov;
+
+      const t = clock.getElapsedTime() * 0.02;
+      const x = Math.sin(t) * 0.3 + 0.8;
+      const y = Math.cos(t * 0.3) * 0.3;
+      innerCameras.earth.position.set(x, y, 1.5);
     }
 
     renderer.composer.render();
