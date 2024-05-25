@@ -111,7 +111,7 @@ export const MainScene = () => {
 
       const t = clock.getElapsedTime() * 0.02;
       const x = Math.sin(t) * 0.3 + 0.8;
-      const y = Math.cos(t * 0.3) * 0.3;
+      const y = Math.cos(t * 0.5) * 0.3 - 0.2;
       innerCameras.earth.position.set(x, y, 1.5);
     }
 
